@@ -29,8 +29,8 @@ conf(project='poppy', prog='poppy', args=[])
 class DeleteProviderSSLCertificateTask(task.Task):
     default_provides = "responders"
 
-    def execute(self, providers_list, domain_name, cert_type,
-                project_id, flavor_id):
+    def execute(self, domain_name, cert_type, project_id,
+                providers_list=[], flavor_id=None):
         service_controller = memoized_controllers.task_controllers('poppy')
 
         cert_obj = ssl_certificate.SSLCertificate(flavor_id, domain_name,

@@ -1052,7 +1052,7 @@ class TestFlowRuns(base.TestCase):
             engines.run(recreate_ssl_certificate.recreate_ssl_certificate(),
                         store=kwargs)
 
-    def test_delete_ssl_certificate_normal(self):
+    def test_delete_ssl_certificate_normal_san(self):
         providers = ['cdn_provider']
         cert_obj = ssl_certificate.SSLCertificate(
             'cdn',
@@ -1061,6 +1061,47 @@ class TestFlowRuns(base.TestCase):
         )
         kwargs = {
             'cert_type': "san",
+            'project_id': json.dumps(str(uuid.uuid4())),
+            'domain_name': "mytestsite.com",
+            'cert_obj': json.dumps(cert_obj.to_dict()),
+            'providers_list': json.dumps(providers),
+            'flavor_id': "premium",
+            'context_dict': context_utils.RequestContext().to_dict()
+        }
+
+        (
+            service_controller,
+            storage_controller,
+            dns_controller,
+            ssl_cert_controller
+        ) = self.all_controllers()
+
+        with MonkeyPatchControllers(service_controller,
+                                    dns_controller,
+                                    storage_controller,
+                                    ssl_cert_controller,
+                                    memoized_controllers.task_controllers):
+
+            self.patch_delete_ssl_certificate_flow(
+                service_controller,
+                storage_controller,
+                dns_controller,
+                ssl_cert_controller
+            )
+            engines.run(
+                delete_ssl_certificate.delete_ssl_certificate(),
+                store=kwargs
+            )
+
+    def test_delete_ssl_certificate_normal_sni(self):
+        providers = ['cdn_provider']
+        cert_obj = ssl_certificate.SSLCertificate(
+            'cdn',
+            'mytestsite.com',
+            'sni',
+        )
+        kwargs = {
+            'cert_type': "sni",
             'project_id': json.dumps(str(uuid.uuid4())),
             'domain_name': "mytestsite.com",
             'cert_obj': json.dumps(cert_obj.to_dict()),
